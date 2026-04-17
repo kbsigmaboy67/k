@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K Browser</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23ff3333'>K</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #121212;
+      --bg-tertiary: #1a1a1a;
+      --bg-hover: #1f1f1f;
+      --accent-red: #ff3333;
+      --accent-red-dark: #cc0000;
+      --accent-red-glow: rgba(255, 51, 51, 0.3);
+      --text-primary: #e0e0e0;
+      --text-secondary: #999;
+      --border-color: #2a2a2a;
+      --tab-active: #1f1f1f;
+      --shadow-glow: 0 0 20px rgba(255, 51, 51, 0.15);
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(255, 51, 51, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(255, 51, 51, 0.02) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .browser-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      gap: 12px;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--accent-red);
+      text-shadow: 0 0 10px var(--accent-red-glow);
+      letter-spacing: 2px;
+      padding: 0 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .logo:hover {
+      text-shadow: 0 0 20px var(--accent-red-glow);
+      transform: scale(1.05);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .nav-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 16px;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 10px var(--accent-red-glow);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .url-bar-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 12px;
+      transition: all 0.3s ease;
+    }
+
+    .url-bar-container:focus-within {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red-glow);
+    }
+
+    .url-bar {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      padding: 8px 0;
+      outline: none;
+    }
+
+    .url-bar::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .action-btn:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red-glow);
+      color: #fff;
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 8px;
+      gap: 2px;
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-red) var(--bg-tertiary);
+    }
+
+    .tab-bar::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .tab-bar::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+    }
+
+    .tab-bar::-webkit-scrollbar-thumb {
+      background: var(--accent-red);
+      border-radius: 2px;
+    }
+
+    .tab {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px;
+      min-width: 200px;
+      max-width: 250px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .tab:hover {
+      background: var(--bg-hover);
+    }
+
+    .tab.active {
+      background: var(--tab-active);
+      border-color: var(--accent-red);
+      border-bottom: 2px solid var(--tab-active);
+      box-shadow: 0 -2px 10px var(--accent-red-glow);
+    }
+
+    .tab-favicon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .tab-title {
+      flex: 1;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+
+    .tab-close {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .tab-close:hover {
+      background: var(--accent-red);
+      opacity: 1;
+      box-shadow: 0 0 8px var(--accent-red-glow);
+    }
+
+    .new-tab-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      margin-bottom: 0;
+    }
+
+    .new-tab-btn:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red-glow);
+      color: #fff;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .split-container {
+      display: flex;
+      height: 100%;
+      gap: 2px;
+      background: var(--border-color);
+    }
+
+    .split-pane {
+      flex: 1;
+      position: relative;
+      background: var(--bg-primary);
+    }
+
+    .frame-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    .frame-container.active {
+      display: block;
+    }
+
+    .browser-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    /* New Tab Page */
+    .new-tab-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .new-tab-page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 51, 51, 0.02) 2px,
+          rgba(255, 51, 51, 0.02) 4px
+        );
+      pointer-events: none;
+    }
+
+    .new-tab-logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 120px;
+      font-weight: 900;
+      color: var(--accent-red);
+      text-shadow: 0 0 40px var(--accent-red-glow);
+      letter-spacing: 8px;
+      margin-bottom: 40px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 40px var(--accent-red-glow); }
+      50% { text-shadow: 0 0 60px var(--accent-red-glow), 0 0 80px rgba(255, 51, 51, 0.2); }
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+      max-width: 800px;
+      padding: 20px;
+    }
+
+    .quick-link {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .quick-link:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 20px var(--accent-red-glow);
+      transform: translateY(-4px);
+    }
+
+    .quick-link-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .quick-link-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Context Menu */
+    .context-menu {
+      position: fixed;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 0;
+      min-width: 200px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px var(--accent-red-glow);
+      z-index: 10000;
+      display: none;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .context-menu.active {
+      display: block;
+    }
+
+    .context-menu-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .context-menu-item:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .context-menu-separator {
+      height: 1px;
+      background: var(--border-color);
+      margin: 4px 0;
+    }
+
+    /* Bookmarks Panel */
+    .bookmarks-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bookmarks-panel.active {
+      right: 0;
+    }
+
+    .bookmarks-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bookmarks-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-red);
+    }
+
+    .bookmarks-close {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 24px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .bookmarks-close:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .bookmarks-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .bookmark-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bookmark-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red-glow);
+    }
+
+    .bookmark-favicon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .bookmark-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bookmark-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bookmark-url {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bookmark-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bookmark-action-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .bookmark-action-btn:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      color: #fff;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 500px;
+      max-height: 80vh;
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-red);
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 40px var(--accent-red-glow);
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .settings-panel.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .settings-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .settings-content {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .setting-item {
+      margin-bottom: 20px;
+    }
+
+    .setting-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+      color: var(--text-primary);
+    }
+
+    .setting-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch.active {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+    }
+
+    .toggle-switch.active::after {
+      left: 26px;
+      background: #fff;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1999;
+      display: none;
+    }
+
+    .modal-overlay.active {
+      display: block;
+    }
+
+    /* Edit Bookmark Modal */
+    .edit-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-red);
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 40px var(--accent-red-glow);
+      z-index: 2001;
+      display: none;
+    }
+
+    .edit-modal.active {
+      display: block;
+    }
+
+    .edit-modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-red);
+    }
+
+    .edit-modal-content {
+      padding: 20px;
+    }
+
+    .edit-field {
+      margin-bottom: 16px;
+    }
+
+    .edit-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .edit-field input {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .edit-field input:focus {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red-glow);
+    }
+
+    .edit-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .modal-btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-btn-primary {
+      background: var(--accent-red);
+      color: #fff;
+      border-color: var(--accent-red);
+    }
+
+    .modal-btn-primary:hover {
+      box-shadow: 0 0 20px var(--accent-red-glow);
+    }
+
+    .modal-btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    /* Site Builder Panel */
+    .site-builder-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      max-height: 80vh;
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-red);
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 40px var(--accent-red-glow);
+      z-index: 2001;
+      display: none;
+    }
+
+    .site-builder-panel.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .loader {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      color: var(--accent-red);
+      text-shadow: 0 0 20px var(--accent-red-glow);
+      z-index: 3000;
+      display: none;
+    }
+
+    .loader.active {
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="browser-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="logo" onclick="browser.newTab()">K</div>
+      <div class="nav-buttons">
+        <button class="nav-btn" onclick="browser.goBack()" id="backBtn" disabled>←</button>
+        <button class="nav-btn" onclick="browser.goForward()" id="forwardBtn" disabled>→</button>
+        <button class="nav-btn" onclick="browser.reload()">↻</button>
+        <button class="nav-btn" onclick="browser.goHome()">⌂</button>
+      </div>
+      <div class="url-bar-container">
+        <input type="text" class="url-bar" id="urlBar" placeholder="Enter URL or search..." onkeypress="browser.handleUrlKeypress(event)">
+      </div>
+      <div class="top-actions">
+        <button class="action-btn" onclick="browser.toggleSplit()">Split</button>
+        <button class="action-btn" onclick="browser.toggleBookmarks()">★ Bookmarks</button>
+        <button class="action-btn" onclick="browser.openSiteBuilder()">+ Site</button>
+        <button class="action-btn" onclick="browser.openSettings()">⚙ Settings</button>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="tabBar">
+      <div class="new-tab-btn" onclick="browser.newTab()">+</div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <div class="split-container" id="splitContainer">
+        <div class="split-pane" id="mainPane"></div>
+        <div class="split-pane" id="secondPane" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookmarks Panel -->
+  <div class="bookmarks-panel" id="bookmarksPanel">
+    <div class="bookmarks-header">
+      <div class="bookmarks-title">BOOKMARKS</div>
+      <button class="bookmarks-close" onclick="browser.toggleBookmarks()">×</button>
+    </div>
+    <div class="bookmarks-list" id="bookmarksList"></div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="modal-overlay" id="modalOverlay" onclick="browser.closeModals()"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <div class="bookmarks-title">SETTINGS</div>
+      <button class="bookmarks-close" onclick="browser.closeSettings()">×</button>
+    </div>
+    <div class="settings-content">
+      <div class="setting-item">
+        <label class="setting-label">Sandbox Mode</label>
+        <div class="setting-toggle">
+          <div class="toggle-switch" id="sandboxToggle" onclick="browser.toggleSandbox()"></div>
+          <span id="sandboxStatus">Disabled</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <label class="setting-label">Allow Fullscreen in iFrames</label>
+        <div class="setting-toggle">
+          <div class="toggle-switch active" id="fullscreenToggle" onclick="browser.toggleFullscreen()"></div>
+          <span id="fullscreenStatus">Enabled</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <label class="setting-label">Use Fetch Proxy for Sites</label>
+        <div class="setting-toggle">
+          <div class="toggle-switch" id="proxyToggle" onclick="browser.toggleProxy()"></div>
+          <span id="proxyStatus">Disabled (Direct iFrame)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Bookmark Modal -->
+  <div class="edit-modal" id="editModal">
+    <div class="edit-modal-header">EDIT BOOKMARK</div>
+    <div class="edit-modal-content">
+      <div class="edit-field">
+        <label>Name</label>
+        <input type="text" id="editName">
+      </div>
+      <div class="edit-field">
+        <label>URL</label>
+        <input type="text" id="editUrl">
+      </div>
+      <div class="edit-field">
+        <label>Icon URL</label>
+        <input type="text" id="editIcon">
+      </div>
+    </div>
+    <div class="edit-modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="browser.cancelEdit()">Cancel</button>
+      <button class="modal-btn modal-btn-primary" onclick="browser.saveEdit()">Save</button>
+    </div>
+  </div>
+
+  <!-- Site Builder Panel -->
+  <div class="site-builder-panel" id="siteBuilderPanel">
+    <div class="settings-header">
+      <div class="bookmarks-title">K BROWSER SITE BUILDER</div>
+      <button class="bookmarks-close" onclick="browser.closeSiteBuilder()">×</button>
+    </div>
+    <div class="settings-content">
+      <div class="setting-item">
+        <label class="setting-label">GitHub Repository URL</label>
+        <input type="text" id="repoUrl" placeholder="https://github.com/username/repo" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-family: 'Rajdhani', sans-serif;">
+      </div>
+      <div class="setting-item">
+        <label class="setting-label">Custom Domain (Optional)</label>
+        <input type="text" id="customDomain" placeholder="mysite.mycustomkbrowsersitedomain.gg" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-family: 'Rajdhani', sans-serif;">
+      </div>
+      <div class="setting-item">
+        <label class="setting-label">Deployment Type</label>
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="radio" name="deployType" value="global" checked>
+            <span>Global</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="radio" name="deployType" value="local">
+            <span>Local Only</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="radio" name="deployType" value="password">
+            <span>Password Protected</span>
+          </label>
+        </div>
+      </div>
+      <div class="setting-item" id="passwordField" style="display: none;">
+        <label class="setting-label">Password</label>
+        <input type="password" id="sitePassword" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-family: 'Rajdhani', sans-serif;">
+      </div>
+    </div>
+    <div class="edit-modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="browser.closeSiteBuilder()">Cancel</button>
+      <button class="modal-btn modal-btn-primary" onclick="browser.deploySite()">Deploy Site</button>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" onclick="browser.contextAction('back')">← Back</div>
+    <div class="context-menu-item" onclick="browser.contextAction('forward')">→ Forward</div>
+    <div class="context-menu-item" onclick="browser.contextAction('reload')">↻ Reload</div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item" onclick="browser.contextAction('bookmark')">★ Bookmark This Page</div>
+    <div class="context-menu-item" onclick="browser.contextAction('newTab')">+ New Tab</div>
+    <div class="context-menu-item" onclick="browser.contextAction('newWindow')">⧉ Open in New Window</div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item" onclick="browser.contextAction('viewSource')">⌨ View Page Source</div>
+    <div class="context-menu-item" onclick="browser.contextAction('inspect')">🔍 Inspect Element</div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    DEPLOYING<span class="spinner"></span>
+  </div>
+
+  <script>
+    const browser = {
+      tabs: [],
+      activeTabId: null,
+      tabCounter: 0,
+      splitMode: false,
+      secondPaneTabId: null,
+      settings: {
+        sandbox: false,
+        allowFullscreen: true,
+        useProxy: false
+      },
+      bookmarks: [],
+      editingBookmarkId: null,
+      history: {},
+
+      init() {
+        this.loadBookmarks();
+        this.loadSettings();
+        this.newTab();
+        this.setupEventListeners();
+      },
+
+      setupEventListeners() {
+        // Radio button listener for password field
+        document.querySelectorAll('input[name="deployType"]').forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            document.getElementById('passwordField').style.display = 
+              e.target.value === 'password' ? 'block' : 'none';
+          });
+        });
+
+        // Context menu
+        document.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const menu = document.getElementById('contextMenu');
+          menu.style.left = e.pageX + 'px';
+          menu.style.top = e.pageY + 'px';
+          menu.classList.add('active');
+        });
+
+        document.addEventListener('click', () => {
+          document.getElementById('contextMenu').classList.remove('active');
+        });
+      },
+
+      newTab(url = null) {
+        const tabId = ++this.tabCounter;
+        const tab = {
+          id: tabId,
+          title: 'New Tab',
+          url: url || 'about:newtab',
+          favicon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75" fill="%23ff3333">K</text></svg>',
+          history: [],
+          historyIndex: -1
+        };
+
+        this.tabs.push(tab);
+        this.history[tabId] = { urls: [], index: -1 };
+        this.createTabElement(tab);
+        this.createFrameContainer(tab);
+        this.switchTab(tabId);
+
+        if (url && url !== 'about:newtab') {
+          this.navigate(url, tabId);
+        }
+      },
+
+      createTabElement(tab) {
+        const tabBar = document.getElementById('tabBar');
+        const newTabBtn = tabBar.querySelector('.new-tab-btn');
+        
+        const tabEl = document.createElement('div');
+        tabEl.className = 'tab';
+        tabEl.id = `tab-${tab.id}`;
+        tabEl.innerHTML = `
+          <img class="tab-favicon" src="${tab.favicon}" alt="">
+          <div class="tab-title">${tab.title}</div>
+          <div class="tab-close" onclick="browser.closeTab(${tab.id}, event)">×</div>
+        `;
+        tabEl.onclick = (e) => {
+          if (!e.target.classList.contains('tab-close')) {
+            this.switchTab(tab.id);
+          }
+        };
+        
+        tabBar.insertBefore(tabEl, newTabBtn);
+      },
+
+      createFrameContainer(tab) {
+        const pane = document.getElementById('mainPane');
+        const container = document.createElement('div');
+        container.className = 'frame-container';
+        container.id = `frame-${tab.id}`;
+        
+        if (tab.url === 'about:newtab') {
+          container.innerHTML = this.getNewTabHTML();
+        } else {
+          const iframe = document.createElement('iframe');
+          iframe.className = 'browser-frame';
+          iframe.src = this.processUrl(tab.url);
+          if (this.settings.allowFullscreen) {
+            iframe.setAttribute('allowfullscreen', '');
+            iframe.setAttribute('webkitallowfullscreen', '');
+            iframe.setAttribute('mozallowfullscreen', '');
+          }
+          if (this.settings.sandbox) {
+            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+          }
+          
+          iframe.onload = () => this.updateTabInfo(tab.id, iframe);
+          container.appendChild(iframe);
+        }
+        
+        pane.appendChild(container);
+      },
+
+      getNewTabHTML() {
+        return `
+          <div class="new-tab-page">
+            <div class="new-tab-logo">K</div>
+            <div class="quick-links">
+              <a class="quick-link" onclick="browser.navigate('https://github.com')">
+                <div class="quick-link-icon">🐙</div>
+                <div class="quick-link-title">GitHub</div>
+              </a>
+              <a class="quick-link" onclick="browser.navigate('https://stackoverflow.com')">
+                <div class="quick-link-icon">💬</div>
+                <div class="quick-link-title">Stack Overflow</div>
+              </a>
+              <a class="quick-link" onclick="browser.navigate('https://developer.mozilla.org')">
+                <div class="quick-link-icon">📚</div>
+                <div class="quick-link-title">MDN</div>
+              </a>
+              <a class="quick-link" onclick="browser.navigate('https://reddit.com')">
+                <div class="quick-link-icon">🤖</div>
+                <div class="quick-link-title">Reddit</div>
+              </a>
+            </div>
+          </div>
+        `;
+      },
+
+      switchTab(tabId) {
+        // Update active tab
+        this.activeTabId = tabId;
+        
+        // Update tab UI
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        const tabEl = document.getElementById(`tab-${tabId}`);
+        if (tabEl) tabEl.classList.add('active');
+        
+        // Show frame
+        document.querySelectorAll('.frame-container').forEach(frame => frame.classList.remove('active'));
+        const frameEl = document.getElementById(`frame-${tabId}`);
+        if (frameEl) frameEl.classList.add('active');
+        
+        // Update URL bar
+        const tab = this.tabs.find(t => t.id === tabId);
+        if (tab) {
+          document.getElementById('urlBar').value = tab.url === 'about:newtab' ? '' : tab.url;
+          this.updateNavButtons(tabId);
+        }
+      },
+
+      closeTab(tabId, event) {
+        event?.stopPropagation();
+        
+        const index = this.tabs.findIndex(t => t.id === tabId);
+        if (index === -1) return;
+        
+        // Remove tab data
+        this.tabs.splice(index, 1);
+        delete this.history[tabId];
+        
+        // Remove DOM elements
+        document.getElementById(`tab-${tabId}`)?.remove();
+        document.getElementById(`frame-${tabId}`)?.remove();
+        
+        // Switch to another tab
+        if (this.activeTabId === tabId) {
+          if (this.tabs.length > 0) {
+            const newActiveTab = this.tabs[Math.max(0, index - 1)];
+            this.switchTab(newActiveTab.id);
+          } else {
+            this.newTab();
+          }
+        }
+      },
+
+      processUrl(url) {
+        if (!url) return 'about:blank';
+        
+        // Handle special protocols
+        if (url.startsWith('view-source:')) {
+          const targetUrl = url.substring(12);
+          return this.createViewSourcePage(targetUrl);
+        }
+        
+        if (url.startsWith('about:')) return 'about:blank';
+        
+        // Handle javascript: and data: URIs
+        if (url.startsWith('javascript:') || url.startsWith('data:')) {
+          return url;
+        }
+        
+        // Add protocol if missing
+        if (!url.match(/^[a-zA-Z]+:\/\//)) {
+          // Check if it looks like a domain
+          if (url.includes('.') && !url.includes(' ')) {
+            url = 'https://' + url;
+          } else {
+            // Search
+            url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+          }
+        }
+        
+        return url;
+      },
+
+      createViewSourcePage(url) {
+        return `data:text/html,<html><head><style>body{background:#0a0a0a;color:#e0e0e0;font-family:monospace;padding:20px;margin:0;}pre{white-space:pre-wrap;word-wrap:break-word;}</style></head><body><h2 style="color:#ff3333;">View Source: ${url}</h2><pre id="source">Loading...</pre><script>fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('${url}')).then(r=>r.text()).then(html=>document.getElementById('source').textContent=html).catch(e=>document.getElementById('source').textContent='Error loading source: '+e);</script></body></html>`;
+      },
+
+      navigate(url, tabId = null) {
+        const targetTabId = tabId || this.activeTabId;
+        const tab = this.tabs.find(t => t.id === targetTabId);
+        if (!tab) return;
+        
+        const processedUrl = this.processUrl(url);
+        tab.url = processedUrl;
+        
+        // Add to history
+        const hist = this.history[targetTabId];
+        hist.urls = hist.urls.slice(0, hist.index + 1);
+        hist.urls.push(processedUrl);
+        hist.index = hist.urls.length - 1;
+        
+        // Update frame
+        const frameContainer = document.getElementById(`frame-${targetTabId}`);
+        if (!frameContainer) return;
+        
+        if (processedUrl.startsWith('view-source:')) {
+          frameContainer.innerHTML = '';
+          const iframe = document.createElement('iframe');
+          iframe.className = 'browser-frame';
+          iframe.src = this.createViewSourcePage(processedUrl.substring(12));
+          frameContainer.appendChild(iframe);
+        } else {
+          let iframe = frameContainer.querySelector('iframe');
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.className = 'browser-frame';
+            if (this.settings.allowFullscreen) {
+              iframe.setAttribute('allowfullscreen', '');
+              iframe.setAttribute('webkitallowfullscreen', '');
+              iframe.setAttribute('mozallowfullscreen', '');
+            }
+            if (this.settings.sandbox) {
+              iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+            }
+            iframe.onload = () => this.updateTabInfo(targetTabId, iframe);
+            frameContainer.appendChild(iframe);
+          }
+          iframe.src = processedUrl;
+        }
+        
+        this.updateNavButtons(targetTabId);
+        if (targetTabId === this.activeTabId) {
+          document.getElementById('urlBar').value = processedUrl;
+        }
+      },
+
+      updateTabInfo(tabId, iframe) {
+        const tab = this.tabs.find(t => t.id === tabId);
+        if (!tab) return;
+        
+        try {
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          const title = doc.title || tab.url;
+          tab.title = title;
+          
+          // Try to get favicon
+          const link = doc.querySelector("link[rel*='icon']");
+          if (link) {
+            tab.favicon = link.href;
+          }
+        } catch (e) {
+          // Cross-origin restrictions
+          tab.title = new URL(tab.url).hostname;
+        }
+        
+        this.updateTabElement(tabId);
+      },
+
+      updateTabElement(tabId) {
+        const tab = this.tabs.find(t => t.id === tabId);
+        if (!tab) return;
+        
+        const tabEl = document.getElementById(`tab-${tabId}`);
+        if (tabEl) {
+          tabEl.querySelector('.tab-title').textContent = tab.title;
+          tabEl.querySelector('.tab-favicon').src = tab.favicon;
+        }
+      },
+
+      handleUrlKeypress(event) {
+        if (event.key === 'Enter') {
+          const url = document.getElementById('urlBar').value;
+          this.navigate(url);
+        }
+      },
+
+      goBack() {
+        const hist = this.history[this.activeTabId];
+        if (hist && hist.index > 0) {
+          hist.index--;
+          const tab = this.tabs.find(t => t.id === this.activeTabId);
+          if (tab) {
+            tab.url = hist.urls[hist.index];
+            const iframe = document.querySelector(`#frame-${this.activeTabId} iframe`);
+            if (iframe) iframe.src = tab.url;
+            document.getElementById('urlBar').value = tab.url;
+            this.updateNavButtons(this.activeTabId);
+          }
+        }
+      },
+
+      goForward() {
+        const hist = this.history[this.activeTabId];
+        if (hist && hist.index < hist.urls.length - 1) {
+          hist.index++;
+          const tab = this.tabs.find(t => t.id === this.activeTabId);
+          if (tab) {
+            tab.url = hist.urls[hist.index];
+            const iframe = document.querySelector(`#frame-${this.activeTabId} iframe`);
+            if (iframe) iframe.src = tab.url;
+            document.getElementById('urlBar').value = tab.url;
+            this.updateNavButtons(this.activeTabId);
+          }
+        }
+      },
+
+      reload() {
+        const iframe = document.querySelector(`#frame-${this.activeTabId} iframe`);
+        if (iframe) {
+          iframe.src = iframe.src;
+        }
+      },
+
+      goHome() {
+        this.navigate('about:newtab');
+      },
+
+      updateNavButtons(tabId) {
+        const hist = this.history[tabId];
+        if (!hist) return;
+        
+        document.getElementById('backBtn').disabled = hist.index <= 0;
+        document.getElementById('forwardBtn').disabled = hist.index >= hist.urls.length - 1;
+      },
+
+      toggleSplit() {
+        this.splitMode = !this.splitMode;
+        const secondPane = document.getElementById('secondPane');
+        
+        if (this.splitMode) {
+          secondPane.style.display = 'block';
+          // Create a new tab for second pane if needed
+          if (!this.secondPaneTabId && this.tabs.length > 1) {
+            this.secondPaneTabId = this.tabs[1].id;
+            this.movTabToPane(this.secondPaneTabId, 'secondPane');
+          }
+        } else {
+          secondPane.style.display = 'none';
+          if (this.secondPaneTabId) {
+            this.moveTabToPane(this.secondPaneTabId, 'mainPane');
+            this.secondPaneTabId = null;
+          }
+        }
+      },
+
+      moveTabToPane(tabId, paneId) {
+        const frame = document.getElementById(`frame-${tabId}`);
+        const pane = document.getElementById(paneId);
+        if (frame && pane) {
+          pane.appendChild(frame);
+        }
+      },
+
+      toggleBookmarks() {
+        const panel = document.getElementById('bookmarksPanel');
+        panel.classList.toggle('active');
+        this.renderBookmarks();
+      },
+
+      addBookmark() {
+        const tab = this.tabs.find(t => t.id === this.activeTabId);
+        if (!tab || tab.url === 'about:newtab') return;
+        
+        const bookmark = {
+          id: Date.now(),
+          name: tab.title,
+          url: tab.url,
+          favicon: tab.favicon
+        };
+        
+        this.bookmarks.push(bookmark);
+        this.saveBookmarks();
+        this.renderBookmarks();
+      },
+
+      renderBookmarks() {
+        const list = document.getElementById('bookmarksList');
+        list.innerHTML = this.bookmarks.map(b => `
+          <div class="bookmark-item" onclick="browser.navigate('${b.url}')">
+            <img class="bookmark-favicon" src="${b.favicon}" alt="">
+            <div class="bookmark-info">
+              <div class="bookmark-name">${b.name}</div>
+              <div class="bookmark-url">${b.url}</div>
+            </div>
+            <div class="bookmark-actions">
+              <button class="bookmark-action-btn" onclick="event.stopPropagation(); browser.editBookmark(${b.id})">✎</button>
+              <button class="bookmark-action-btn" onclick="event.stopPropagation(); browser.deleteBookmark(${b.id})">×</button>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      editBookmark(id) {
+        const bookmark = this.bookmarks.find(b => b.id === id);
+        if (!bookmark) return;
+        
+        this.editingBookmarkId = id;
+        document.getElementById('editName').value = bookmark.name;
+        document.getElementById('editUrl').value = bookmark.url;
+        document.getElementById('editIcon').value = bookmark.favicon;
+        
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('editModal').classList.add('active');
+      },
+
+      saveEdit() {
+        const bookmark = this.bookmarks.find(b => b.id === this.editingBookmarkId);
+        if (!bookmark) return;
+        
+        bookmark.name = document.getElementById('editName').value;
+        bookmark.url = document.getElementById('editUrl').value;
+        bookmark.favicon = document.getElementById('editIcon').value;
+        
+        this.saveBookmarks();
+        this.renderBookmarks();
+        this.cancelEdit();
+      },
+
+      cancelEdit() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.getElementById('editModal').classList.remove('active');
+        this.editingBookmarkId = null;
+      },
+
+      deleteBookmark(id) {
+        this.bookmarks = this.bookmarks.filter(b => b.id !== id);
+        this.saveBookmarks();
+        this.renderBookmarks();
+      },
+
+      saveBookmarks() {
+        localStorage.setItem('kbrowser_bookmarks', JSON.stringify(this.bookmarks));
+      },
+
+      loadBookmarks() {
+        const saved = localStorage.getItem('kbrowser_bookmarks');
+        if (saved) {
+          this.bookmarks = JSON.parse(saved);
+        }
+      },
+
+      openSettings() {
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('settingsPanel').classList.add('active');
+      },
+
+      closeSettings() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.getElementById('settingsPanel').classList.remove('active');
+      },
+
+      closeModals() {
+        this.closeSettings();
+        this.cancelEdit();
+        this.closeSiteBuilder();
+      },
+
+      toggleSandbox() {
+        this.settings.sandbox = !this.settings.sandbox;
+        const toggle = document.getElementById('sandboxToggle');
+        const status = document.getElementById('sandboxStatus');
+        
+        toggle.classList.toggle('active');
+        status.textContent = this.settings.sandbox ? 'Enabled' : 'Disabled';
+        this.saveSettings();
+      },
+
+      toggleFullscreen() {
+        this.settings.allowFullscreen = !this.settings.allowFullscreen;
+        const toggle = document.getElementById('fullscreenToggle');
+        const status = document.getElementById('fullscreenStatus');
+        
+        toggle.classList.toggle('active');
+        status.textContent = this.settings.allowFullscreen ? 'Enabled' : 'Disabled';
+        this.saveSettings();
+      },
+
+      toggleProxy() {
+        this.settings.useProxy = !this.settings.useProxy;
+        const toggle = document.getElementById('proxyToggle');
+        const status = document.getElementById('proxyStatus');
+        
+        toggle.classList.toggle('active');
+        status.textContent = this.settings.useProxy ? 'Enabled (Fetch Proxy)' : 'Disabled (Direct iFrame)';
+        this.saveSettings();
+      },
+
+      saveSettings() {
+        localStorage.setItem('kbrowser_settings', JSON.stringify(this.settings));
+      },
+
+      loadSettings() {
+        const saved = localStorage.getItem('kbrowser_settings');
+        if (saved) {
+          this.settings = { ...this.settings, ...JSON.parse(saved) };
+          
+          // Update UI
+          if (this.settings.sandbox) {
+            document.getElementById('sandboxToggle').classList.add('active');
+            document.getElementById('sandboxStatus').textContent = 'Enabled';
+          }
+          if (!this.settings.allowFullscreen) {
+            document.getElementById('fullscreenToggle').classList.remove('active');
+            document.getElementById('fullscreenStatus').textContent = 'Disabled';
+          }
+          if (this.settings.useProxy) {
+            document.getElementById('proxyToggle').classList.add('active');
+            document.getElementById('proxyStatus').textContent = 'Enabled (Fetch Proxy)';
+          }
+        }
+      },
+
+      contextAction(action) {
+        switch(action) {
+          case 'back': this.goBack(); break;
+          case 'forward': this.goForward(); break;
+          case 'reload': this.reload(); break;
+          case 'bookmark': this.addBookmark(); break;
+          case 'newTab': this.newTab(); break;
+          case 'newWindow': this.openInNewWindow(); break;
+          case 'viewSource': 
+            const tab = this.tabs.find(t => t.id === this.activeTabId);
+            if (tab && tab.url !== 'about:newtab') {
+              this.navigate('view-source:' + tab.url);
+            }
+            break;
+          case 'inspect':
+            alert('Inspect Element: Press F12 to open DevTools for the main browser window.');
+            break;
+        }
+      },
+
+      openInNewWindow() {
+        const tab = this.tabs.find(t => t.id === this.activeTabId);
+        if (!tab || tab.url === 'about:newtab') return;
+        
+        // Create invisible character for title
+        const invisTitle = '\u200B'; // Zero-width space
+        const transparentIcon = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
+        
+        const win = window.open('about:blank', invisTitle, 'width=1200,height=800');
+        if (win) {
+          win.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${invisTitle}</title>
+              <link rel="icon" href="${transparentIcon}">
+              <style>
+                body, html { margin: 0; padding: 0; overflow: hidden; }
+                iframe { width: 100vw; height: 100vh; border: none; }
+              </style>
+            </head>
+            <body>
+              <iframe src="${tab.url}" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
+            </body>
+            </html>
+          `);
+        }
+      },
+
+      openSiteBuilder() {
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('siteBuilderPanel').classList.add('active');
+      },
+
+      closeSiteBuilder() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.getElementById('siteBuilderPanel').classList.remove('active');
+      },
+
+      async deploySite() {
+        const repoUrl = document.getElementById('repoUrl').value;
+        const customDomain = document.getElementById('customDomain').value;
+        const deployType = document.querySelector('input[name="deployType"]:checked').value;
+        const password = document.getElementById('sitePassword').value;
+        
+        if (!repoUrl) {
+          alert('Please enter a GitHub repository URL');
+          return;
+        }
+        
+        // Show loader
+        document.getElementById('loader').classList.add('active');
+        
+        // Simulate deployment (in real implementation, this would call backend API)
+        setTimeout(() => {
+          document.getElementById('loader').classList.remove('active');
+          
+          const domain = customDomain || repoUrl.split('/').pop() + '.mycustomkbrowsersitedomain.gg';
+          const deployedUrl = `https://${domain}`;
+          
+          alert(`Site deployed successfully!\n\nURL: ${deployedUrl}\nType: ${deployType}\n\nNote: This is a demo. In production, this would integrate with GitHub OAuth and deploy to your specified platform.`);
+          
+          this.closeSiteBuilder();
+          this.newTab(deployedUrl);
+        }, 2000);
+      }
+    };
+
+    // Initialize browser
+    browser.init();
+  </script>
+</body>
+</html>
